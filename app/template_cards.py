@@ -115,14 +115,14 @@ def build_welcome_card(*, task_id: str | None = None, bind_url: str = "") -> dic
     return build_button_interaction_card(
         title="欢迎使用CRM客户绑定助手",
         desc="",
-        sub_title="请选择下面任意一种方式绑定客户",
+        sub_title="",
         task_id=task_id or new_task_id(),
         horizontal_items=[
-            {"keyname": "方式一", "value": "发送：绑定客户"},
-            {"keyname": "方式二", "value": "点击下面按钮绑定客户"},
+            #{"keyname": "方式一", "value": "发送：绑定客户"},
+            #{"keyname": "方式二", "value": "点击下面按钮绑定客户"},
         ],
         buttons=[start_button],
-        source_desc="CRM客户绑定",
+        source_desc="CRM客户绑定助手",
     )
 
 

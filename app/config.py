@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     smartsheet_field_customer_name: str = ""
     smartsheet_field_submitter: str = ""
     crm_bind_review_status: str = "未审核"
+    crm_bind_success_message: str = (
+        "您提交的需求工艺已收到，您将在工艺处理完成后得到反馈。"
+    )
     # 以下为旧「需求登记」字段，FKH CRM 绑定不再使用，保留以免误读 .env
     smartsheet_field_demand_content: str = "f9VtuW"
     smartsheet_field_image: str = "fhZuXt"

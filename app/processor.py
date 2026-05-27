@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from threading import Lock
 from typing import Any
 
+from app.aibot_context import remember_from_payload
 from app.config import get_settings
 from app.registrations import MAX_REGISTRATION_IMAGES, registration_store
 from app.smartsheet import add_demand_record
@@ -52,6 +53,8 @@ class MessageProcessor:
         self._max_seen = max_seen
 
     def handle(self, payload: dict[str, Any]) -> dict[str, Any] | None:
+        remember_from_payload(payload)
+
         msgid = payload.get("msgid")
         if msgid and self._is_duplicate(msgid):
             logger.info("重复回调已忽略 msgid=%s", msgid)

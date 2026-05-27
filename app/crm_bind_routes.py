@@ -9,9 +9,11 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
+from app.aibot_context import aibot_context_store
 from app.config import get_settings
 from app.smartsheet import add_crm_bind_record
 from app.upload_token import create_upload_token, verify_upload_token
+from app.wecom_active import active_send_markdown
 from app.wecom_jssdk import build_jssdk_config
 
 logger = logging.getLogger(__name__)
@@ -37,6 +39,20 @@ class CrmBindSubmitBody(BaseModel):
     process_type: str = Field(..., pattern="^(绑定|解绑)$")
     product_code: str = Field(..., min_length=1, max_length=200)
     customer_name: str = Field(..., min_length=1, max_length=200)
+
+
+def _notify_bind_success(userid: str) -> None:
+    ctx = aibot_context_store.take(userid)
+    if ctx is None:
+        logger.warning("CRM 绑定提交成功但无 response_url，跳过企微提醒 userid=%s", userid)
+        return
+
+    message = get_settings().crm_bind_success_message.strip()
+    if not message:
+        return
+
+    if not active_send_markdown(ctx.response_url, message):
+        logger.warning("CRM 绑定成功提醒发送失败 userid=%s", userid)
 
 
 def _resolve_token(token: str) -> str:
@@ -88,4 +104,5 @@ async def crm_bind_submit(
         body.product_code,
         body.customer_name,
     )
+    _notify_bind_success(userid)
     return JSONResponse({"ok": True})
