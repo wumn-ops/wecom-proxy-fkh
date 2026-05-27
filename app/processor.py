@@ -12,6 +12,7 @@ from app.config import get_settings
 from app.registrations import MAX_REGISTRATION_IMAGES, registration_store
 from app.smartsheet import add_demand_record
 from app.system_options import parse_option_list, parse_system_selection
+from app.crm_bind_routes import build_crm_bind_page_url
 from app.upload_routes import build_upload_page_url
 from app.template_cards import (
     build_button_clicked_card,
@@ -66,7 +67,7 @@ class MessageProcessor:
         event_type = event.get("eventtype")
 
         if event_type == "enter_chat":
-            return wrap_template_card(build_welcome_card())
+            return self._build_welcome_reply(payload)
 
         if event_type == "template_card_event":
             return self._handle_template_card_event(payload, event)
@@ -123,6 +124,14 @@ class MessageProcessor:
         userid = from_info.get("userid")
         userids = [userid] if userid and payload.get("chattype") == "group" else None
         return wrap_update_template_card(updated, userids=userids)
+
+    def _build_welcome_reply(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from_info = payload.get("from") or {}
+        userid = from_info.get("userid", "")
+        bind_url = build_crm_bind_page_url(userid) if userid else ""
+        if userid and not bind_url:
+            logger.warning("未配置 PUBLIC_BASE_URL，欢迎卡片无法打开 CRM 绑定 H5")
+        return wrap_template_card(build_welcome_card(bind_url=bind_url))
 
     def _apply_registration_selection(
         self,
@@ -218,6 +227,9 @@ class MessageProcessor:
             )
 
         normalized = user_text.strip()
+
+        if normalized in {"绑定客户", "开始绑定客户"}:
+            return self._build_welcome_reply(payload)
 
         is_register, demand_content = self._parse_registration_text(normalized)
         if is_register:

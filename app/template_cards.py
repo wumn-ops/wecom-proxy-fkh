@@ -101,21 +101,28 @@ def build_user_action_card(
     )
 
 
-def build_welcome_card(*, task_id: str | None = None) -> dict[str, Any]:
+def build_welcome_card(*, task_id: str | None = None, bind_url: str = "") -> dict[str, Any]:
     """进入会话欢迎卡片。"""
+    start_button: dict[str, Any] = {"text": "开始绑定客户", "style": 1, "key": "start"}
+    if bind_url:
+        start_button = {
+            "text": "开始绑定客户",
+            "style": 4,
+            "type": 1,
+            "url": bind_url,
+        }
+
     return build_button_interaction_card(
-        title="欢迎使用 wecom-proxy",
-        desc="企业微信智能机器人",
-        sub_title="请选择功能或直接发送消息",
+        title="欢迎使用CRM客户绑定助手",
+        desc="",
+        sub_title="请选择下面任意一种方式绑定客户",
         task_id=task_id or new_task_id(),
         horizontal_items=[
-            {"keyname": "指令", "value": "/help 查看帮助"},
-            {"keyname": "卡片", "value": "发送「卡片」获取交互卡片"},
+            {"keyname": "方式一", "value": "发送：绑定客户"},
+            {"keyname": "方式二", "value": "点击下面按钮绑定客户"},
         ],
-        buttons=[
-            {"text": "开始咨询", "style": 1, "key": "start"},
-            {"text": "功能介绍", "style": 4, "key": "intro"},
-        ],
+        buttons=[start_button],
+        source_desc="CRM客户绑定",
     )
 
 

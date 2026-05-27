@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>CRM客户绑定</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --primary: #1677ff;
+      --text: #1f2329;
+      --muted: #8f959e;
+      --border: #e5e6eb;
+      --danger: #ff4d4f;
+      --success: #389e0d;
+      --warn-bg: #fff7e6;
+      --warn-border: #ffd591;
+      --warn-text: #ad6800;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 8px;
+    }
+    .desc {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .field-label {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 8px;
+    }
+    .field-label .hint {
+      font-weight: 400;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .option {
+      flex: 1;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 15px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .option.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: #eef5ff;
+    }
+    .input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 15px;
+      margin-bottom: 16px;
+      outline: none;
+    }
+    .input:focus {
+      border-color: var(--primary);
+    }
+    .notice {
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--warn-text);
+      margin-top: 4px;
+    }
+    .notice p {
+      margin: 0 0 8px;
+    }
+    .notice p:last-child {
+      margin-bottom: 0;
+    }
+    .actions {
+      margin-top: 20px;
+    }
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .toast {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 18px;
+    }
+    .toast.error { color: var(--danger); }
+    .toast.success { color: var(--success); }
+    .fallback-tip {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--warn-text);
+    }
+    .success-box {
+      display: none;
+      background: #f6ffed;
+      border: 1px solid #b7eb8f;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #135200;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>CRM客户绑定</h1>
+      <div class="desc">请填写以下信息，提交后将写入智能表格并由机器人或人工处理。</div>
+
+      <div id="formArea">
+        <div class="field-label">处理类型（绑定/解绑）</div>
+        <div class="options" id="typeOptions">
+          <button type="button" class="option" data-value="绑定">绑定</button>
+          <button type="button" class="option" data-value="解绑">解绑</button>
+        </div>
+
+        <div class="field-label">
+          需处理货号
+          <span class="hint">（与 CRM 端助记码字段一致）</span>
+        </div>
+        <input class="input" id="productCode" type="text" placeholder="请输入货号/助记码" maxlength="200" />
+
+        <div class="field-label">
+          需绑定客户名称
+          <span class="hint">（与 CRM 端客户全称一致）</span>
+        </div>
+        <input class="input" id="customerName" type="text" placeholder="请输入客户全称" maxlength="200" />
+
+        <div class="notice">
+          <p>以上模板由机器人自助即时处理，若您发送的信息与 CRM 端不一致，机器人无法处理，则当天晚上统一人工干预处理。</p>
+          <p>若涉及同个货号需绑定多个客户，机器人无法处理，请先与已绑定客户对应销售沟通好，达成一致结论后再提交此需求，由人工当天晚上统一处理。</p>
+          <p>若涉及同个货号需解绑部分客户，机器人无法处理，由人工当天晚上统一处理。</p>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" type="button" id="submitBtn">提交</button>
+        </div>
+      </div>
+
+      <div class="success-box" id="successBox">提交成功，请返回企业微信等待处理结果。</div>
+      <div class="actions" id="closeArea" style="display:none;">
+        <button class="btn btn-primary" type="button" id="closeBtn">关闭</button>
+      </div>
+
+      <div class="toast" id="toast"></div>
+      <div class="fallback-tip" id="fallbackTip">请点左上角 <strong>返回</strong> 回到企业微信。</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@wecom/jssdk@2.2.5/dist/wecom.global.prod.js"></script>
+  <script src="https://open.work.weixin.qq.com/wwopen/js/jweixin-1.2.0.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token") || "";
+    const toastEl = document.getElementById("toast");
+    const fallbackTipEl = document.getElementById("fallbackTip");
+    const submitBtn = document.getElementById("submitBtn");
+    const closeBtn = document.getElementById("closeBtn");
+    const formArea = document.getElementById("formArea");
+    const successBox = document.getElementById("successBox");
+    const closeArea = document.getElementById("closeArea");
+    const productCodeEl = document.getElementById("productCode");
+    const customerNameEl = document.getElementById("customerName");
+    const typeOptionsEl = document.getElementById("typeOptions");
+
+    let processType = "绑定";
+
+    const pageBase = location.pathname.split("?")[0].replace(/\/$/, "");
+
+    function setToast(text, type = "") {
+      toastEl.textContent = text;
+      toastEl.className = "toast" + (type ? ` ${type}` : "");
+    }
+
+    function formatError(data, res) {
+      const detail = data.detail;
+      if (typeof detail === "string") return detail;
+      if (Array.isArray(detail) && detail.length) return detail.map((d) => d.msg || JSON.stringify(d)).join("；");
+      return `请求失败 (${res.status})`;
+    }
+
+    function api(path, options = {}) {
+      const joiner = path.includes("?") ? "&" : "?";
+      const url = `${pageBase}/api/${path}${joiner}token=${encodeURIComponent(token)}`;
+      return fetch(url, options).then(async (res) => {
+        let data = {};
+        const text = await res.text();
+        if (text) {
+          try { data = JSON.parse(text); } catch (_) { data = { detail: text.slice(0, 120) }; }
+        }
+        if (!res.ok) throw new Error(formatError(data, res));
+        return data;
+      });
+    }
+
+    function renderTypeOptions() {
+      typeOptionsEl.querySelectorAll(".option").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.value === processType);
+      });
+    }
+
+    typeOptionsEl.addEventListener("click", (event) => {
+      const btn = event.target.closest(".option");
+      if (!btn) return;
+      processType = btn.dataset.value || "绑定";
+      renderTypeOptions();
+    });
+
+    function invokeCloseWindow() {
+      const bridgeTargets = [window];
+      if (window.parent && window.parent !== window) bridgeTargets.push(window.parent);
+      bridgeTargets.forEach((target) => {
+        try {
+          const bridge = target.WeixinJSBridge;
+          if (!bridge) return;
+          if (typeof bridge.call === "function") bridge.call("closeWindow");
+          if (typeof bridge.invoke === "function") bridge.invoke("closeWindow", {}, function () {});
+        } catch (_) {}
+      });
+      try { if (window.ww && typeof ww.closeWindow === "function") ww.closeWindow(); } catch (_) {}
+      try { if (typeof window.close === "function") window.close(); } catch (_) {}
+    }
+
+    function closeWecomPage() {
+      invokeCloseWindow();
+      if (document.addEventListener) {
+        document.addEventListener("WeixinJSBridgeReady", invokeCloseWindow, false);
+      }
+      [50, 150, 400].forEach((ms) => setTimeout(invokeCloseWindow, ms));
+      setTimeout(() => {
+        if (window.history.length > 1) {
+          window.history.back();
+          return;
+        }
+        fallbackTipEl.style.display = "block";
+        setToast("请点左上角 ← 返回企业微信", "success");
+      }, 700);
+    }
+
+    async function initWecomJssdk() {
+      try {
+        const cfg = await api(`jssdk-config?url=${encodeURIComponent(location.href.split("#")[0])}`);
+        if (!cfg.appId) return;
+        if (window.ww && typeof ww.register === "function") {
+          await ww.register({
+            corpId: cfg.appId,
+            agentId: cfg.agentId,
+            jsApiList: ["closeWindow"],
+            getConfigSignature: async () => ({
+              timestamp: cfg.timestamp,
+              nonceStr: cfg.nonceStr,
+              signature: cfg.signature,
+            }),
+          });
+        }
+      } catch (_) {}
+    }
+
+    async function submitForm() {
+      const productCode = (productCodeEl.value || "").trim();
+      const customerName = (customerNameEl.value || "").trim();
+      if (!processType) {
+        setToast("请选择处理类型", "error");
+        return;
+      }
+      if (!productCode) {
+        setToast("请填写需处理货号", "error");
+        productCodeEl.focus();
+        return;
+      }
+      if (!customerName) {
+        setToast("请填写需绑定客户名称", "error");
+        customerNameEl.focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      setToast("提交中…");
+      try {
+        await api("submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            process_type: processType,
+            product_code: productCode,
+            customer_name: customerName,
+          }),
+        });
+        formArea.style.display = "none";
+        successBox.style.display = "block";
+        closeArea.style.display = "block";
+        setToast("提交成功", "success");
+        setTimeout(closeWecomPage, 800);
+      } catch (err) {
+        setToast(err.message || "提交失败", "error");
+        submitBtn.disabled = false;
+      }
+    }
+
+    if (!token) {
+      setToast("链接无效，请从企业微信卡片重新进入", "error");
+      submitBtn.disabled = true;
+    } else {
+      renderTypeOptions();
+      initWecomJssdk();
+    }
+
+    submitBtn.addEventListener("click", submitForm);
+    closeBtn.addEventListener("click", closeWecomPage);
+  </script>
+</body>
+</html>

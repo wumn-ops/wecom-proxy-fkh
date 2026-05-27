@@ -19,14 +19,21 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     smartsheet_webhook_url: str = ""
+    smartsheet_field_process_type: str = ""
+    smartsheet_field_bind_status: str = ""
+    smartsheet_field_product_code: str = ""
+    smartsheet_field_customer_name: str = ""
+    smartsheet_field_submitter: str = ""
+    crm_bind_review_status: str = "未审核"
+    # 以下为旧「需求登记」字段，FKH CRM 绑定不再使用，保留以免误读 .env
     smartsheet_field_demand_content: str = "f9VtuW"
     smartsheet_field_image: str = "fhZuXt"
-    smartsheet_field_submitter: str = "f04Gwj"
     smartsheet_field_system: str = "fJodHY"
     registration_system_options: str = "CRM,SAP,MES,其他"
     issue_list_url: str = ""
 
     public_base_url: str = ""
+    crm_bind_path: str = "/crm/bind/fkh-api"
     register_upload_path: str = "/register/upload/fkh-api"
     upload_token_ttl_seconds: int = 3600
     max_upload_bytes: int = 5 * 1024 * 1024

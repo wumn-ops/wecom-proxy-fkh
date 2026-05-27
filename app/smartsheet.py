@@ -83,3 +83,78 @@ def add_demand_record(
     errmsg = data.get("errmsg", "未知错误")
     logger.error("智能表格写入失败 errcode=%s errmsg=%s", errcode, errmsg)
     return False, str(errmsg)
+
+
+def add_crm_bind_record(
+    *,
+    process_type: str,
+    product_code: str,
+    customer_name: str,
+    userid: str,
+) -> tuple[bool, str]:
+    """向智能表格新增一条 CRM 客户绑定/解绑记录。"""
+    settings = get_settings()
+    if not settings.smartsheet_webhook_url:
+        return False, "未配置 SMARTSHEET_WEBHOOK_URL"
+
+    missing = [
+        name
+        for name, value in (
+            ("SMARTSHEET_FIELD_PROCESS_TYPE", settings.smartsheet_field_process_type),
+            ("SMARTSHEET_FIELD_BIND_STATUS", settings.smartsheet_field_bind_status),
+            ("SMARTSHEET_FIELD_PRODUCT_CODE", settings.smartsheet_field_product_code),
+            ("SMARTSHEET_FIELD_CUSTOMER_NAME", settings.smartsheet_field_customer_name),
+            ("SMARTSHEET_FIELD_SUBMITTER", settings.smartsheet_field_submitter),
+        )
+        if not value
+    ]
+    if missing:
+        return False, f"未配置智能表格字段: {', '.join(missing)}"
+
+    if not userid.strip():
+        return False, "提交人 userid 为空"
+
+    values: dict[str, Any] = {
+        settings.smartsheet_field_process_type: [{"text": process_type}],
+        settings.smartsheet_field_bind_status: [
+            {"text": settings.crm_bind_review_status}
+        ],
+        settings.smartsheet_field_product_code: product_code,
+        settings.smartsheet_field_customer_name: customer_name,
+        settings.smartsheet_field_submitter: [{"user_id": userid}],
+    }
+
+    payload: dict[str, Any] = {"add_records": [{"values": values}]}
+    logger.debug("CRM 绑定 Webhook payload: %s", payload)
+
+    try:
+        response = httpx.post(
+            settings.smartsheet_webhook_url,
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            timeout=10.0,
+        )
+        response.raise_for_status()
+        data = response.json()
+    except httpx.HTTPError as exc:
+        logger.exception("CRM 绑定智能表格 Webhook 请求失败")
+        return False, f"网络请求失败: {exc}"
+    except ValueError as exc:
+        logger.exception("CRM 绑定智能表格 Webhook 响应解析失败")
+        return False, f"响应解析失败: {exc}"
+
+    errcode = data.get("errcode")
+    if errcode == 0:
+        logger.info(
+            "CRM 绑定写入成功 type=%s status=%s product=%s customer=%s submitter=%s",
+            process_type,
+            settings.crm_bind_review_status,
+            product_code,
+            customer_name,
+            userid,
+        )
+        return True, "ok"
+
+    errmsg = data.get("errmsg", "未知错误")
+    logger.error("CRM 绑定写入失败 errcode=%s errmsg=%s", errcode, errmsg)
+    return False, str(errmsg)

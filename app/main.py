@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 from app.config import get_settings
 from app.routes import router
+from app.crm_bind_routes import router as crm_bind_router
 from app.upload_routes import router as upload_router
 
 settings = get_settings()
@@ -20,6 +21,7 @@ app = FastAPI(
 )
 
 app.include_router(router)
+app.include_router(crm_bind_router)
 app.include_router(upload_router)
 
 
@@ -30,5 +32,6 @@ async def root() -> dict[str, str]:
         "mode": "webhook",
         "callback": settings.wecom_callback_path,
         "health": settings.health_path,
+        "crm_bind": settings.crm_bind_path,
         "register_upload": settings.register_upload_path,
     }
